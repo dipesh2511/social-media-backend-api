@@ -5,6 +5,15 @@ import { mongodbConnect } from "./src/config/mongodb.config.js";
 import GenericErrorResponse from "./src/error.response.handler/custom.application.level.error.js";
 import { RESPONSE_MESSAGES, RESPONSE_CODES, ERROR_TYPE } from "./src/common/common.variable.js";
 
+// routing imports
+import secureUserRouter from "./src/features/users/user.secure.router.js";
+import publicUserRouter from "./src/features/users/user.public.router.js";
+import postsRouter from "./src/features/posts/posts.router.js";
+import commentsRouter from "./src/features/comments/comments.router.js";
+import likesRouter from "./src/features/likes/likes.router.js";
+import friendsRouter from "./src/features/friendships/friends.router.js";
+import otpRouter from "./src/features/otp/otp.router.js";
+
 
 const server = express();
 const port = process.env.PORT || 3000;
@@ -14,6 +23,15 @@ server.use(express.json());
 server.use(express.urlencoded({ extended: true }));
 
 // routes for the api
+server.use('/api/users',publicUserRouter);
+server.use('/api/users',secureUserRouter);
+server.use('/api/post',postsRouter);
+server.use('/api/comments',commentsRouter);
+server.use('/api/likes',likesRouter);
+server.use('/api/friends',friendsRouter);
+server.use('/api/otp',otpRouter);
+
+
 
 
 // here we are handling the Application level errors
