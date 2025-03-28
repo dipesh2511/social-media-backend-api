@@ -1,16 +1,18 @@
-import { applySalting } from "../../common/common.function.js";
+import { applySalting, tc } from "../../common/common.function.js";
 import {
   ERROR_TYPE,
+  OPERATION_STATUS,
   RESPONSE_CODES,
   RESPONSE_MESSAGES,
 } from "../../common/common.variable.js";
 import GenericErrorResponse from "../../error.response.handler/custom.application.level.error.js";
+import GenericApplicationResponse from "../../error.response.handler/custom.application.level.response.js";
 import UserModel from "./user.model.js";
 import UserRepository from "./user.repository.js";
 
 export default class UserController {
   constructor() {
-    this.userRepositoy = new UserRepository();
+    this.userRepository = new UserRepository();
   }
 
   // secure paths started here
@@ -38,7 +40,6 @@ export default class UserController {
       profilePicture,
       bio,
     } = req.body;
-    console.log(req.body);
 
     if (!password) {
       next(
@@ -56,12 +57,35 @@ export default class UserController {
       username,
       email,
       new_password,
-      (firstName = "null"),
-      (lastName = "null"),
-      (profilePicture = "null"),
-      (bio = "null")
+      firstName,
+      lastName,
+      profilePicture,
+      bio
     );
-    res.send(user);
+
+    let [error, data] = await tc(this.userRepository.signUp(user));
+
+    if (error || !data || data instanceof GenericErrorResponse) {
+      next(
+        new GenericErrorResponse(
+          RESPONSE_MESSAGES.USER_NOT_CREATED,
+          RESPONSE_CODES.SERVER_ERROR,
+          ERROR_TYPE.INTERNAL_ERROR,
+          "User not created due to some error we'll check and let you know"
+        )
+      );
+    }
+
+    res
+      .status(RESPONSE_CODES.CREATED)
+      .send(
+        new GenericApplicationResponse(
+          RESPONSE_MESSAGES.USER_SIGNUP_SUCCESS,
+          OPERATION_STATUS.CREATE,
+          RESPONSE_CODES.CREATED,
+          data
+        )
+      );
   }
 
   async signIn(req, res, next) {}

@@ -19,7 +19,6 @@ export default class UserModel {
     this.bio = bio;
   }
 
-  
   // secure paths started here
   static getDetails() {}
 
@@ -39,10 +38,10 @@ export default class UserModel {
     username,
     email,
     password,
-    firstName,
-    lastName,
-    profilePicture,
-    bio
+    firstName = null,
+    lastName = null,
+    profilePicture = null,
+    bio = null
   ) {
     let new_user = new UserModel(
       username,

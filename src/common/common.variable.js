@@ -10,6 +10,8 @@ export const RESPONSE_MESSAGES = {
   SERVER_ERROR: "Something went wrong. Please try again later.",
 
   // User-specific messages
+
+  USER_NOT_CREATED: "User registration was not successful.",
   USER_SIGNUP_SUCCESS: "User registered successfully.",
   USER_SIGNIN_SUCCESS: "User logged in successfully.",
   USER_LOGOUT_SUCCESS: "User logged out successfully.",
@@ -79,4 +81,12 @@ export const ERROR_TYPE = {
   UNPROCESSABLE_ENTITY: "UNPROCESSABLE_ENTITY",
   INTERNAL_ERROR: "INTERNAL_ERROR",
   DATABASE_ERROR: "DATABASE_ERROR",
+};
+
+export const OPERATION_STATUS = {
+  CREATE: 'CREATE',
+  READ: 'READ',
+  UPDATE: 'UPDATE',
+  DELETE: 'DELETE',
+  LIST: 'LIST'
 };
