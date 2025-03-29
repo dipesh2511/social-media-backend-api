@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "dipesh pohanekar",
+  "author": "Dipesh Pohanekar",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^3.0.2",
