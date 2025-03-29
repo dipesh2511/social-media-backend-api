@@ -1,10 +1,17 @@
-import { applySalting, tc } from "../../common/common.function.js";
+import jwt from "jsonwebtoken";
+import {
+  applySalting,
+  checkHash,
+  tc,
+  jwtSign,
+} from "../../common/common.function.js";
 import {
   ERROR_TYPE,
   OPERATION_STATUS,
   RESPONSE_CODES,
   RESPONSE_MESSAGES,
 } from "../../common/common.variable.js";
+import { UserPayloadClass } from "../../common/common.classes.js";
 import GenericErrorResponse from "../../error.response.handler/custom.application.level.error.js";
 import GenericApplicationResponse from "../../error.response.handler/custom.application.level.response.js";
 import UserModel from "./user.model.js";
@@ -42,7 +49,7 @@ export default class UserController {
     } = req.body;
 
     if (!password) {
-      next(
+      return next(
         new GenericErrorResponse(
           RESPONSE_MESSAGES.BAD_REQUEST,
           RESPONSE_CODES.BAD_REQUEST,
@@ -66,7 +73,7 @@ export default class UserController {
     let [error, data] = await tc(this.userRepository.signUp(user));
 
     if (error || !data || data instanceof GenericErrorResponse) {
-      next(
+      return next(
         new GenericErrorResponse(
           RESPONSE_MESSAGES.USER_NOT_CREATED,
           RESPONSE_CODES.SERVER_ERROR,
@@ -88,7 +95,57 @@ export default class UserController {
       );
   }
 
-  async signIn(req, res, next) {}
+  async signIn(req, res, next) {
+    let { username, email, password } = req.body;
+    let [error, data] = await tc(this.userRepository.signIn(username, email));
+
+    if (error || !data || data instanceof GenericErrorResponse) {
+      return next(
+        new GenericErrorResponse(
+          RESPONSE_MESSAGES.USER_NOT_FOUND,
+          RESPONSE_CODES.BAD_REQUEST,
+          ERROR_TYPE.BAD_REQUEST,
+          "User not found with the given credentials"
+        )
+      );
+    }
+
+    let [compare_password_error, compare_password] = await tc(
+      checkHash(password, data.password)
+    );
+
+    if (
+      compare_password_error != null ||
+      typeof compare_password != "boolean" ||
+      compare_password == false
+    ) {
+      return next(
+        new GenericErrorResponse(
+          RESPONSE_MESSAGES.INVALID_CREDENTIALS,
+          RESPONSE_CODES.UNAUTHORIZED,
+          ERROR_TYPE.UNAUTHORIZED,
+          "Wrong credentials ,try login again"
+        )
+      );
+    }
+    let userpayload = UserPayloadClass.createUserPayload(
+      data.username,
+      data.email,
+      data._id
+    );
+    let token = jwtSign(userpayload);
+    data = { accessToken: token };
+    res
+      .status(RESPONSE_CODES.SUCCESS)
+      .send(
+        new GenericApplicationResponse(
+          RESPONSE_MESSAGES.USER_SIGNIN_SUCCESS,
+          OPERATION_STATUS.LOGIN,
+          RESPONSE_CODES.SUCCESS,
+          data
+        )
+      );
+  }
 
   // not secure path ended here
 }

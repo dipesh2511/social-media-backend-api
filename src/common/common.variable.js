@@ -88,5 +88,6 @@ export const OPERATION_STATUS = {
   READ: 'READ',
   UPDATE: 'UPDATE',
   DELETE: 'DELETE',
-  LIST: 'LIST'
+  LIST: 'LIST',
+  LOGIN : 'LOGIN'
 };

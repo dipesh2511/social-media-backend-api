@@ -42,7 +42,19 @@ export default class UserRepository {
     return data;
   }
 
-  async signIn() {}
+  async signIn(username, email) {
+    let [error, data] = await tc(this.userModel.findOne({ username, email }).select('+password'));
+    
+    if (error || !data) {
+      return new GenericErrorResponse(
+        RESPONSE_MESSAGES.USER_NOT_FOUND,
+        RESPONSE_CODES.BAD_REQUEST,
+        ERROR_TYPE.BAD_REQUEST,
+        "User not found with the given credentials"
+      );
+    }
+    return data;
+  }
 
   // not secure path ended here
 }

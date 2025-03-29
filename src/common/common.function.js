@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 /**
  * A utility function to handle promises with try-catch blocks in a cleaner way.
@@ -39,9 +40,6 @@ export const tc = async (Promise, errorExt = {}) => {
   }
 };
 
-
-
-
 /**
  * Generates a salted hash for a given password using bcrypt.
  * This function is used during user registration or password updates to securely store passwords.
@@ -64,9 +62,6 @@ export const applySalting = async (password) => {
   const new_password = await bcrypt.hash(password, salt);
   return new_password;
 };
-
-
-
 
 /**
  * Compares a plain text password with a hashed password to verify if they match.
@@ -95,4 +90,38 @@ export const applySalting = async (password) => {
 export const checkHash = async (password, hash_password) => {
   const check_password = await bcrypt.compare(password, hash_password);
   return check_password;
+};
+
+
+/**
+ * Generates a JSON Web Token (JWT) with the provided payload.
+ * This function is used to create authentication tokens for users.
+ *
+ * @param {Object} payload - The user data to be encoded in the token
+ * @param {string} payload.username - The user's unique username
+ * @param {string} payload.email - The user's email address
+ * @param {ObjectId} payload.user_id - The MongoDB ObjectId of the user
+ * @returns {string} - Returns the generated JWT token string
+ *
+ * @example
+ * // Usage when creating auth token
+ * const token = jwtSign({
+ *   username: 'johndoe123',
+ *   email: 'john.doe@example.com',
+ *   user_id: new ObjectId('67e7186b3617ffe6d8da1cc2')
+ * });
+ * // Send this token to client for authentication
+ *
+ * @note
+ * - Uses the jsonwebtoken library for signing
+ * - Token expires in 1 year (consider shorter expiry for production)
+ * - Secret key is read from environment variables (JWT_SECRET_KEY)
+ * - Payload is nested under a 'payload' property for additional security
+ * - Never expose the secret key in client-side code
+ */
+export const jwtSign = (payload) => {
+  let token = jwt.sign({ payload }, process.env.JWT_SECRET_KEY, {
+    expiresIn: "1year",
+  });
+  return token;
 };

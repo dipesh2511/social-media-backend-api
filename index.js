@@ -5,6 +5,7 @@ import express from "express";
 import { mongodbConnect } from "./src/config/mongodb.config.js";
 import GenericErrorResponse from "./src/error.response.handler/custom.application.level.error.js";
 import { RESPONSE_MESSAGES, RESPONSE_CODES, ERROR_TYPE } from "./src/common/common.variable.js";
+import { jwtAuthGuard } from "./src/guard/jwt.auth.guard.js";
 
 // routing imports
 import secureUserRouter from "./src/features/users/user.secure.router.js";
@@ -25,7 +26,7 @@ server.use(express.urlencoded({ extended: true }));
 
 // routes for the api
 server.use('/api/users',publicUserRouter);
-server.use('/api/users',secureUserRouter);
+server.use('/api/users',jwtAuthGuard,secureUserRouter);
 server.use('/api/post',postsRouter);
 server.use('/api/comments',commentsRouter);
 server.use('/api/likes',likesRouter);
