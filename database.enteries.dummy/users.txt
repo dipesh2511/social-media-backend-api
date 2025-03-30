@@ -1,0 +1,27 @@
+    {
+        "username": "johndoe123",
+        "email": "john.doe@example.com",
+        "password": "12345",
+        "firstName": "John",
+        "lastName": "Doe",
+        "profilePicture": "https://example.com/profiles/johndoe.jpg"
+    }
+
+    {
+        "username": "janesmith456",
+        "email": "jane.smith@example.com",
+        "password": "12345",
+        "firstName": "Jane",
+        "lastName": "Smith",
+        "profilePicture": "https://example.com/profiles/janesmith.jpg"
+    }
+
+    {
+        "username": "michael_b",
+        "email": "michael.brown@example.com",
+        "password": "12345",
+        "firstName": "Michael",
+        "lastName": "Brown",
+        "profilePicture": "https://example.com/profiles/michaelbrown.jpg"
+    }
+

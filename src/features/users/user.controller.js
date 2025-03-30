@@ -23,11 +23,79 @@ export default class UserController {
   }
 
   // secure paths started here
-  async getDetails(req, res, next) {}
 
-  async getAllDetails(req, res, next) {}
+  async getDetails(req, res, next) {
+    let loggedInUserId = req.params.userId;
 
-  async updateDetails(req, res, next) {}
+    if (loggedInUserId != req.payload.user_id) {
+      return next(
+        new GenericErrorResponse(
+          RESPONSE_MESSAGES.LOGGED_IN_USER_NOT_MATCH,
+          RESPONSE_CODES.CONFLICT,
+          ERROR_TYPE.BAD_REQUEST,
+          "Provided user id is not a valid user id for logged in user check it and retry again"
+        )
+      );
+    }
+
+    let [error, data] = await tc(
+      this.userRepository.getDetails(loggedInUserId)
+    );
+
+    if (error || !data || data instanceof GenericErrorResponse) {
+      return next(
+        new GenericErrorResponse(
+          RESPONSE_MESSAGES.USER_NOT_FOUND,
+          RESPONSE_CODES.BAD_REQUEST,
+          ERROR_TYPE.BAD_REQUEST,
+          "User not found with the given user id"
+        )
+      );
+    }
+    res
+      .status(RESPONSE_CODES.SUCCESS)
+      .send(
+        new GenericApplicationResponse(
+          RESPONSE_MESSAGES.USER_DETAILS_FETCHED,
+          OPERATION_STATUS.READ,
+          RESPONSE_CODES.SUCCESS,
+          data
+        )
+      );
+  }
+
+  async getAllDetails(req, res, next) {
+    let loggedInUserId = req.payload.user_id;
+
+    let [error, data] = await tc(
+      this.userRepository.getAllDetails(loggedInUserId)
+    );
+
+    if (error || !data || data instanceof GenericErrorResponse) {
+      return next(
+        new GenericErrorResponse(
+          RESPONSE_MESSAGES.USER_NOT_FOUND,
+          RESPONSE_CODES.BAD_REQUEST,
+          ERROR_TYPE.BAD_REQUEST,
+          "User not found with the given user id"
+        )
+      );
+    }
+    res
+      .status(RESPONSE_CODES.SUCCESS)
+      .send(
+        new GenericApplicationResponse(
+          RESPONSE_MESSAGES.USER_DETAILS_FETCHED,
+          OPERATION_STATUS.READ,
+          RESPONSE_CODES.SUCCESS,
+          data
+        )
+      );
+  }
+
+  async updateDetails(req, res, next) {
+    res.send("photo uploaded")
+  }
 
   async logout(req, res, next) {}
 

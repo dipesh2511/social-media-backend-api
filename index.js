@@ -1,10 +1,14 @@
 import "./env.js";
 
-
 import express from "express";
+import path from "path";
 import { mongodbConnect } from "./src/config/mongodb.config.js";
 import GenericErrorResponse from "./src/error.response.handler/custom.application.level.error.js";
-import { RESPONSE_MESSAGES, RESPONSE_CODES, ERROR_TYPE } from "./src/common/common.variable.js";
+import {
+  RESPONSE_MESSAGES,
+  RESPONSE_CODES,
+  ERROR_TYPE,
+} from "./src/common/common.variable.js";
 import { jwtAuthGuard } from "./src/guard/jwt.auth.guard.js";
 
 // routing imports
@@ -16,7 +20,6 @@ import likesRouter from "./src/features/likes/likes.router.js";
 import friendsRouter from "./src/features/friendships/friends.router.js";
 import otpRouter from "./src/features/otp/otp.router.js";
 
-
 const server = express();
 const port = process.env.PORT || 3000;
 
@@ -24,17 +27,17 @@ const port = process.env.PORT || 3000;
 server.use(express.json());
 server.use(express.urlencoded({ extended: true }));
 
+// statically making available to the profile.pictures and post.pictures folder
+server.use(express.static(path.join("pictures")));
+
 // routes for the api
-server.use('/api/users',publicUserRouter);
-server.use('/api/users',jwtAuthGuard,secureUserRouter);
-server.use('/api/post',postsRouter);
-server.use('/api/comments',commentsRouter);
-server.use('/api/likes',likesRouter);
-server.use('/api/friends',friendsRouter);
-server.use('/api/otp',otpRouter);
-
-
-
+server.use("/api/users", publicUserRouter);
+server.use("/api/users", jwtAuthGuard, secureUserRouter);
+server.use("/api/post", postsRouter);
+server.use("/api/comments", commentsRouter);
+server.use("/api/likes", likesRouter);
+server.use("/api/friends", friendsRouter);
+server.use("/api/otp", otpRouter);
 
 // here we are handling the Application level errors
 server.use((error, req, res, next) => {

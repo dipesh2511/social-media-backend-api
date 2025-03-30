@@ -16,7 +16,10 @@ export const RESPONSE_MESSAGES = {
   USER_SIGNIN_SUCCESS: "User logged in successfully.",
   USER_LOGOUT_SUCCESS: "User logged out successfully.",
   USER_NOT_FOUND: "User does not exist.",
+  USERS_NOT_FOUND_BULK : "Users not found in bulk",
   INVALID_CREDENTIALS: "Invalid email or password.",
+  LOGGED_IN_USER_NOT_MATCH: "Unmatched url user id and logged in user id.",
+  USER_DETAILS_FETCHED : "User fetched successfully", 
 
   // Post-specific messages
   POST_CREATED: "Post created successfully.",
@@ -50,6 +53,7 @@ export const RESPONSE_MESSAGES = {
   FILE_UPLOAD_SUCCESS: "File uploaded successfully.",
   INVALID_FILE_FORMAT: "Invalid file format. Please upload a valid file.",
   FILE_SIZE_EXCEEDED: "File size exceeds the allowed limit.",
+  FILE_UPLOAD_UNSUCCESS : " File upload was not successful"
 };
 
 export const RESPONSE_CODES = {
