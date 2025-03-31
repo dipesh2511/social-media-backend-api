@@ -95,5 +95,6 @@ export const OPERATION_STATUS = {
   UPDATE: 'UPDATE',
   DELETE: 'DELETE',
   LIST: 'LIST',
-  LOGIN : 'LOGIN'
+  LOGIN : 'LOGIN',
+  LOGOUT:'LOGOUT'
 };

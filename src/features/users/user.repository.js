@@ -98,7 +98,7 @@ export default class UserRepository {
                 $lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
               },
             },
-          }
+          },
         }
       )
     );
@@ -112,6 +112,33 @@ export default class UserRepository {
       );
     }
     return data;
+  }
+
+  async verifyValidToken(token, user_id) {
+    let [error, data] = await tc(
+      this.userModel
+        .findOne({ _id: new ObjectId(user_id) })
+        .select({ validAccessTokens: 1, invalidAccessTokens: 1 })
+    );
+
+    if (error || !data) {
+      return GenericErrorResponse(
+        RESPONSE_MESSAGES.BAD_REQUEST,
+        RESPONSE_CODES.BAD_REQUEST,
+        ERROR_TYPE.BAD_REQUEST,
+        "No such user is present in the data base"
+      );
+    }
+
+    if (data.validAccessTokens.length < 1) {
+      return true;
+    }
+
+    if (data.invalidAccessTokens.includes(token)) {
+      return false;
+    }
+
+    return true;
   }
 
   // utility function for users ended here
@@ -167,7 +194,24 @@ export default class UserRepository {
     return data;
   }
 
-  async logout() {}
+  async logout(token, user_id) {
+    let [error, data] = await tc(
+      this.userModel.updateOne(
+        { _id: new ObjectId(user_id) },
+        { $push: { invalidAccessTokens: token } }
+      )
+    );
+
+    if (error || !data) {
+      new GenericErrorResponse(
+        RESPONSE_MESSAGES.INTERNAL_ERROR,
+        RESPONSE_CODES.INTERNAL_ERROR,
+        ERROR_TYPE.INTERNAL_ERROR,
+        "Enable to Log out from system ,try login again"
+      );
+    }
+    return data;
+  }
 
   async logoutAllDevices() {}
 

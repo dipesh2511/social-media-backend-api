@@ -178,6 +178,17 @@ export default class UserController {
       this.userRepository.updateDetails(updateUserFilter, req.payload.user_id)
     );
 
+    if (error || !data || data instanceof GenericErrorResponse) {
+      return next(
+        new GenericErrorResponse(
+          RESPONSE_MESSAGES.USER_NOT_UPDATED,
+          RESPONSE_CODES.SERVER_ERROR,
+          ERROR_TYPE.SERVER_ERROR,
+          "User not updated successfully due to some reason"
+        )
+      );
+    }
+
     if (updateUserFilter.password) {
       delete updateUserFilter.password;
     }
@@ -194,7 +205,35 @@ export default class UserController {
       );
   }
 
-  async logout(req, res, next) {}
+  async logout(req, res, next) {
+    const authHeader = req.headers.authorization;
+    const token = authHeader.split(" ")[1];
+    let user_id = req.payload.user_id;
+
+    let [error, data] = await tc(this.userRepository.logout(token, user_id));
+
+    if (error || !data || data instanceof GenericErrorResponse) {
+      return next(
+        new GenericErrorResponse(
+          RESPONSE_MESSAGES.SERVER_ERROR,
+          RESPONSE_CODES.SERVER_ERROR,
+          ERROR_TYPE.SERVER_ERROR,
+          "User not able to logout successfully, try again later"
+        )
+      );
+    }
+
+    res
+      .status(RESPONSE_CODES.SUCCESS)
+      .send(
+        new GenericApplicationResponse(
+          RESPONSE_MESSAGES.USER_LOGOUT_SUCCESS,
+          OPERATION_STATUS.LOGOUT,
+          RESPONSE_CODES.SUCCESS,
+          data
+        )
+      );
+  }
 
   async logoutAllDevices(req, res, next) {}
 
@@ -305,7 +344,7 @@ export default class UserController {
         )
       );
     }
-    
+
     let userpayload = UserPayloadClass.createUserPayload(
       data.username,
       data.email,

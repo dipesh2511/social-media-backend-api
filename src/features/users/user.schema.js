@@ -56,17 +56,24 @@ export const UserSchema = new Schema(
     },
 
     // tokens
-    validAccessTokens: [
-      {
-        token: String,
+    validAccessTokens: {
+      type: [{
+        token: {
+          type: String,
+          select: false 
+        },
         createdAt: {
           type: Date,
           default: Date.now,
-          expires: "7d",
-        },
-      },
-    ],
-    invalidAccessTokens: [String],
+          expires: "7d"
+        }
+      }],
+      select: false 
+    },
+    invalidAccessTokens: {
+      type: [String],
+      select: false 
+    },
 
     // Timestamps
     createdAt: {

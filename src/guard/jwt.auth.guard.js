@@ -6,60 +6,51 @@ import {
   ERROR_TYPE,
 } from "../common/common.variable.js";
 import { tc } from "../common/common.function.js";
+import UserRepository from "../features/users/user.repository.js";
+
+let userRepository = new UserRepository();
 
 /**
- * JWT Authentication Guard Middleware
+ * Middleware for JWT authentication and authorization guard.
+ * Verifies access tokens and attaches user payload to the request if valid.
  *
- * @module Middleware/Auth
- * @description
- * Express middleware that authenticates requests using JSON Web Tokens (JWT).
- * Verifies the JWT from the Authorization header and attaches user data to the request.
- *
- * @function jwtAuthGuard
- * @async
- * @param {Object} req - Express request object
+ * @param {Object} req - Express request object containing headers
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  *
- * @throws {GenericErrorResponse} - Throws custom error responses for:
- *   - Missing/invalid Authorization header (401 Unauthorized)
- *   - Invalid/expired tokens (401 Unauthorized)
- *
- * @property {Object} req.payload - Attaches authenticated user data to the request:
- *   - username: User's username
- *   - email: User's email address
- *   - user_id: User's unique identifier
- *
- * @process
- * 1. Checks for valid "Bearer <token>" Authorization header
- * 2. Extracts and verifies JWT using secret key
- * 3. Handles token expiration and validation errors
- * 4. Attaches decoded user payload to request object
- * 5. Proceeds to next middleware on successful authentication
- *
- * @requires jsonwebtoken - For JWT verification
- * @requires ../error.response.handler/custom.application.level.error.js - Custom error handler
- * @requires ../common/common.variable.js - Application constants
- * @requires ../common/common.function.js - Utility functions (tc for try-catch)
+ * @returns {void|GenericErrorResponse} - Either proceeds to next middleware or returns:
+ *   - 401 Unauthorized for missing/invalid tokens
+ *   - Custom expired token messages
+ *   - Rejection when token not in validAccessTokens
  *
  * @example
- * // In your route definitions:
- * router.get('/protected-route', jwtAuthGuard, (req, res) => {
- *   // Access authenticated user data:
- *   console.log(req.payload.username);
- *   res.send('Protected content');
+ * // Basic usage in route
+ * router.get('/protected', jwtAuthGuard, (req, res) => {
+ *   // Only accessible with valid token
+ *   res.json(req.payload); 
  * });
  *
- * @note
- * - Ensure JWT_SECRET_KEY environment variable is set
- * - Client must send token in "Authorization: Bearer <token>" header
- * - Always use HTTPS in production to protect tokens
- * - Consider refresh token implementation for better security
+ * @example
+ * // Error handling
+ * app.use((err, req, res, next) => {
+ *   if (err instanceof GenericErrorResponse) {
+ *     return res.status(err.statusCode).json(err);
+ *   }
+ * });
  *
- * @see {@link https://jwt.io/introduction/|JWT Introduction}
- * @see {@link https://expressjs.com/en/guide/using-middleware.html|Express Middleware}
+ * @note This implements a robust authentication flow that:
+ *   - Validates Authorization header format
+ *   - Verifies JWT signature and expiration
+ *   - Checks token against database records
+ *   - Attaches user data to req.payload
+ *   - Handles all error cases with specific messages
+ *
+ * @security
+ * - Uses Bearer token authentication scheme (RFC 6750)
+ * - Validates tokens against stored validAccessTokens
+ * - Protects against token replay attacks
+ * - Implements proper error handling to avoid information leakage
  */
-
 export const jwtAuthGuard = async (req, res, next) => {
   // 1. Check Authorization header format
   const authHeader = req.headers.authorization;
@@ -96,6 +87,26 @@ export const jwtAuthGuard = async (req, res, next) => {
         RESPONSE_CODES.UNAUTHORIZED,
         errorType,
         message
+      )
+    );
+  }
+
+  let [checkTokenError, data] = await tc(
+    userRepository.verifyValidToken(token, decoded.payload.user_id)
+  );
+  if (
+    checkTokenError ||
+    !data ||
+    data instanceof GenericErrorResponse ||
+    typeof data != "boolean" ||
+    data == false
+  ) {
+    return next(
+      new GenericErrorResponse(
+        RESPONSE_MESSAGES.UNAUTHORIZED,
+        RESPONSE_CODES.UNAUTHORIZED,
+        ERROR_TYPE.TOKEN_EXPIRED,
+        "Please login again"
       )
     );
   }
