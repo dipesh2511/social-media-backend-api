@@ -2,6 +2,10 @@ import "./env.js";
 
 import express from "express";
 import path from "path";
+import swagger from "swagger-ui-express";
+import swaggerFile from "./swagger.json" assert { type: 'json' };
+
+//created imports
 import { mongodbConnect } from "./src/config/mongodb.config.js";
 import GenericErrorResponse from "./src/error.response.handler/custom.application.level.error.js";
 import {
@@ -29,8 +33,11 @@ server.use(express.urlencoded({ extended: true }));
 
 // statically making available to the profile.pictures and post.pictures folder
 server.use(express.static(path.join("pictures")));
-server.use(express.static(path.join("pictures","profile.pictures")));
-server.use(express.static(path.join("pictures","post.pictures")));
+server.use(express.static(path.join("pictures", "profile.pictures")));
+server.use(express.static(path.join("pictures", "post.pictures")));
+
+// swagger route
+server.use("/api-docs",swagger.serve,swagger.setup(swaggerFile));
 
 // routes for the api
 server.use("/api/users", publicUserRouter);

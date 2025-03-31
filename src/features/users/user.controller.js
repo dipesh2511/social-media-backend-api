@@ -48,7 +48,7 @@ export default class UserController {
           RESPONSE_MESSAGES.USER_NOT_FOUND,
           RESPONSE_CODES.BAD_REQUEST,
           ERROR_TYPE.BAD_REQUEST,
-          "User not found with the given user id"
+          data?.validation_error || "User not found with the given user id"
         )
       );
     }
@@ -77,7 +77,7 @@ export default class UserController {
           RESPONSE_MESSAGES.USER_NOT_FOUND,
           RESPONSE_CODES.BAD_REQUEST,
           ERROR_TYPE.BAD_REQUEST,
-          "User not found with the given user id"
+          data?.validation_error || "User not found with the given user id"
         )
       );
     }
@@ -184,7 +184,8 @@ export default class UserController {
           RESPONSE_MESSAGES.USER_NOT_UPDATED,
           RESPONSE_CODES.SERVER_ERROR,
           ERROR_TYPE.SERVER_ERROR,
-          "User not updated successfully due to some reason"
+          data?.validation_error ||
+            "User not updated successfully due to some reason"
         )
       );
     }
@@ -218,7 +219,8 @@ export default class UserController {
           RESPONSE_MESSAGES.SERVER_ERROR,
           RESPONSE_CODES.SERVER_ERROR,
           ERROR_TYPE.SERVER_ERROR,
-          "User not able to logout successfully, try again later"
+          data?.validation_error ||
+            "User not able to logout successfully, try again later"
         )
       );
     }
@@ -235,7 +237,32 @@ export default class UserController {
       );
   }
 
-  async logoutAllDevices(req, res, next) {}
+  async logoutAllDevices(req, res, next) {
+    let user_id = req.payload.user_id;
+    let [error, data] = await tc(this.userRepository.logoutAllDevices(user_id));
+    if (error || !data || data instanceof GenericErrorResponse) {
+      return next(
+        new GenericErrorResponse(
+          RESPONSE_MESSAGES.INTERNAL_ERROR,
+          RESPONSE_CODES.INTERNAL_ERROR,
+          ERROR_TYPE.INTERNAL_ERROR,
+          data?.validation_error ||
+          "Internal server error we'll check and let you know"
+        )
+      );
+    }
+    data = "User is logged out from all devices please login again later";
+    res
+    .status(RESPONSE_CODES.SUCCESS)
+    .send(
+      new GenericApplicationResponse(
+        RESPONSE_MESSAGES.USER_LOGOUT_SUCCESS,
+        OPERATION_STATUS.LOGOUT,
+        RESPONSE_CODES.SUCCESS,
+        data
+      )
+    );
+  }
 
   // secure paths ended here
 
@@ -294,7 +321,8 @@ export default class UserController {
           RESPONSE_MESSAGES.USER_NOT_CREATED,
           RESPONSE_CODES.SERVER_ERROR,
           ERROR_TYPE.INTERNAL_ERROR,
-          "User not created due to some error we'll check and let you know"
+          data?.validation_error ||
+            "User not created due to some error we'll check and let you know"
         )
       );
     }
@@ -321,7 +349,7 @@ export default class UserController {
           RESPONSE_MESSAGES.USER_NOT_FOUND,
           RESPONSE_CODES.BAD_REQUEST,
           ERROR_TYPE.BAD_REQUEST,
-          "User not found with the given credentials"
+          data?.validation_error || "User not found with the given credentials"
         )
       );
     }
@@ -356,18 +384,19 @@ export default class UserController {
       this.userRepository.addTokenToDataBase(token, data._id)
     );
 
-    if (tokenError || !tokenData) {
+    if (tokenError || !tokenData || tokenData instanceof GenericErrorResponse) {
       return next(
         new GenericErrorResponse(
           RESPONSE_MESSAGES.INTERNAL_ERROR,
           RESPONSE_CODES.INTERNAL_ERROR,
           ERROR_TYPE.INTERNAL_ERROR,
-          "Enable to generate token ,try login again"
+          tokenData?.validation_error ||
+            "Enable to generate token ,try login again"
         )
       );
     }
 
-    data = { accessToken: token };
+    data = { accessToken: `Bearer ${token}` };
     res
       .status(RESPONSE_CODES.SUCCESS)
       .send(

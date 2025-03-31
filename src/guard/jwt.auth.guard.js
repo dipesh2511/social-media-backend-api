@@ -54,7 +54,6 @@ let userRepository = new UserRepository();
 export const jwtAuthGuard = async (req, res, next) => {
   // 1. Check Authorization header format
   const authHeader = req.headers.authorization;
-
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return next(
       new GenericErrorResponse(

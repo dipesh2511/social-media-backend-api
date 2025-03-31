@@ -84,7 +84,7 @@ export default class UserRepository {
         RESPONSE_MESSAGES.INTERNAL_ERROR,
         RESPONSE_CODES.INTERNAL_ERROR,
         ERROR_TYPE.INTERNAL_ERROR,
-        "Enable to set token in data base ,try login again"
+        error?.message || "Enable to set token in data base ,try login again"
       );
     }
 
@@ -108,7 +108,7 @@ export default class UserRepository {
         RESPONSE_MESSAGES.INTERNAL_ERROR,
         RESPONSE_CODES.INTERNAL_ERROR,
         ERROR_TYPE.INTERNAL_ERROR,
-        "Enable to set token in data base ,try login again"
+        error?.message || "Enable to set token in data base ,try login again"
       );
     }
     return data;
@@ -126,12 +126,12 @@ export default class UserRepository {
         RESPONSE_MESSAGES.BAD_REQUEST,
         RESPONSE_CODES.BAD_REQUEST,
         ERROR_TYPE.BAD_REQUEST,
-        "No such user is present in the data base"
+        error?.message || "No such user is present in the data base"
       );
     }
 
     if (data.validAccessTokens.length < 1) {
-      return true;
+      return false;
     }
 
     if (data.invalidAccessTokens.includes(token)) {
@@ -154,7 +154,7 @@ export default class UserRepository {
         RESPONSE_MESSAGES.USER_NOT_FOUND,
         RESPONSE_CODES.BAD_REQUEST,
         ERROR_TYPE.BAD_REQUEST,
-        "User not found with the given credentials"
+        error?.message || "User not found with the given credentials"
       );
     }
     return data;
@@ -188,7 +188,7 @@ export default class UserRepository {
         RESPONSE_MESSAGES.USER_NOT_CREATED,
         RESPONSE_CODES.SERVER_ERROR,
         ERROR_TYPE.INTERNAL_ERROR,
-        "User not Update due to some issue , try again later"
+        error?.message || "User not Update due to some issue , try again later"
       );
     }
     return data;
@@ -207,13 +207,50 @@ export default class UserRepository {
         RESPONSE_MESSAGES.INTERNAL_ERROR,
         RESPONSE_CODES.INTERNAL_ERROR,
         ERROR_TYPE.INTERNAL_ERROR,
-        "Enable to Log out from system ,try login again"
+        error?.message || "Enable to Log out from system ,try login again"
       );
     }
     return data;
   }
 
-  async logoutAllDevices() {}
+  async logoutAllDevices(user_id) {
+    let [error, data] = await tc(
+      this.userModel
+        .findOne({ _id: new ObjectId(user_id) })
+        .select({ validAccessTokens: 1, invalidAccessTokens: 1 })
+    );
+
+    if (error || !data) {
+      new GenericErrorResponse(
+        RESPONSE_MESSAGES.INTERNAL_ERROR,
+        RESPONSE_CODES.INTERNAL_ERROR,
+        ERROR_TYPE.INTERNAL_ERROR,
+        error?.message || "Enable to Log out from all system ,try login again"
+      );
+    }
+
+    // saving all the valid token in a array
+    // empty the validAccessTokens
+    // adding the valid token array into the invalidAccessTokens
+    let validTokens = [];
+    data.validAccessTokens.forEach((tokenObj) => {
+      validTokens.push(tokenObj.token);
+    });
+
+    data.validAccessTokens = [];
+
+    data.invalidAccessTokens = [...data.invalidAccessTokens, ...validTokens];
+    [error,data] = await tc(data.save())
+    if (error || !data) {
+      new GenericErrorResponse(
+        RESPONSE_MESSAGES.INTERNAL_ERROR,
+        RESPONSE_CODES.INTERNAL_ERROR,
+        ERROR_TYPE.INTERNAL_ERROR,
+        error?.message || "Enable to Log out from all system ,try login again"
+      );
+    }
+    return data;
+  }
 
   // secure paths ended here
 
@@ -227,10 +264,18 @@ export default class UserRepository {
         RESPONSE_MESSAGES.USER_NOT_CREATED,
         RESPONSE_CODES.SERVER_ERROR,
         ERROR_TYPE.INTERNAL_ERROR,
-        "User not created due to some error we'll check and let you know"
+        error?.message ||
+          "User not created due to some error we'll check and let you know"
       );
     }
-    return data;
+    let userData = data.toObject();
+    delete userData.password;
+    delete userData.invalidAccessTokens;
+    delete userData.validAccessTokens;
+    delete userData.createdAt;
+    delete userData.updatedAt;
+
+    return userData;
   }
 
   async signIn(username, email) {
@@ -243,7 +288,7 @@ export default class UserRepository {
         RESPONSE_MESSAGES.USER_NOT_FOUND,
         RESPONSE_CODES.BAD_REQUEST,
         ERROR_TYPE.BAD_REQUEST,
-        "User not found with the given credentials"
+        error?.message || "User not found with the given credentials"
       );
     }
     return data;
