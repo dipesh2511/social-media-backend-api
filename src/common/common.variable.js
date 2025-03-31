@@ -20,6 +20,8 @@ export const RESPONSE_MESSAGES = {
   INVALID_CREDENTIALS: "Invalid email or password.",
   LOGGED_IN_USER_NOT_MATCH: "Unmatched url user id and logged in user id.",
   USER_DETAILS_FETCHED : "User fetched successfully", 
+  USER_NOT_UPDATED : "User not able to update successfully",
+  USER_UPDATED : "User update successfully",
 
   // Post-specific messages
   POST_CREATED: "Post created successfully.",

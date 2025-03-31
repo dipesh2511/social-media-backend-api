@@ -94,7 +94,104 @@ export default class UserController {
   }
 
   async updateDetails(req, res, next) {
-    res.send("photo uploaded")
+    let updateUserFilter = {};
+    let loggedInUserId = req.params.userId;
+
+    if (loggedInUserId != req.payload.user_id) {
+      return next(
+        new GenericErrorResponse(
+          RESPONSE_MESSAGES.LOGGED_IN_USER_NOT_MATCH,
+          RESPONSE_CODES.CONFLICT,
+          ERROR_TYPE.BAD_REQUEST,
+          "Provided user id is not a valid user id for logged in user check it and retry again"
+        )
+      );
+    }
+
+    let {
+      username,
+      email,
+      password,
+      firstName,
+      lastName,
+      profilePicture,
+      bio,
+    } = req.body;
+
+    if (username != null && email != null) {
+      return next(
+        new GenericErrorResponse(
+          RESPONSE_MESSAGES.BAD_REQUEST,
+          RESPONSE_CODES.BAD_REQUEST,
+          ERROR_TYPE.BAD_REQUEST,
+          "User name and email can't be updated"
+        )
+      );
+    }
+    if (profilePicture) {
+      return next(
+        new GenericErrorResponse(
+          RESPONSE_MESSAGES.BAD_REQUEST,
+          RESPONSE_CODES.BAD_REQUEST,
+          ERROR_TYPE.BAD_REQUEST,
+          "Profile picture can't be string"
+        )
+      );
+    }
+
+    if (password) {
+      password = await applySalting(password);
+      updateUserFilter.password = password;
+    }
+
+    if (firstName) {
+      updateUserFilter.firstName = firstName;
+    }
+
+    if (lastName) {
+      updateUserFilter.lastName = lastName;
+    }
+
+    if (req.file) {
+      updateUserFilter.profilePicture = `/${req.file.filename}`;
+      // let [error, data] = await tc(
+      //   this.userRepository.deleteExistingProfilePicture(req.payload.user_id)
+      // );
+      // if (error || !data) {
+      //   console.log(error)
+      //   return next(
+      //     new GenericErrorResponse(
+      //       RESPONSE_MESSAGES.BAD_REQUEST,
+      //       RESPONSE_CODES.BAD_REQUEST,
+      //       ERROR_TYPE.BAD_REQUEST,
+      //       error
+      //     )
+      //   );
+      // }
+    }
+
+    if (bio) {
+      updateUserFilter.bio = bio;
+    }
+
+    let [error, data] = await tc(
+      this.userRepository.updateDetails(updateUserFilter, req.payload.user_id)
+    );
+
+    if (updateUserFilter.password) {
+      delete updateUserFilter.password;
+    }
+
+    res
+      .status(RESPONSE_CODES.SUCCESS)
+      .send(
+        new GenericApplicationResponse(
+          RESPONSE_MESSAGES.USER_UPDATED,
+          OPERATION_STATUS.UPDATE,
+          RESPONSE_CODES.SUCCESS,
+          updateUserFilter
+        )
+      );
   }
 
   async logout(req, res, next) {}
@@ -126,6 +223,18 @@ export default class UserController {
         )
       );
     }
+
+    if (profilePicture) {
+      return next(
+        new GenericErrorResponse(
+          RESPONSE_MESSAGES.BAD_REQUEST,
+          RESPONSE_CODES.BAD_REQUEST,
+          ERROR_TYPE.BAD_REQUEST,
+          "Profile picture can't be string"
+        )
+      );
+    }
+
     let new_password = await applySalting(password);
 
     let user = UserModel.signUp(
@@ -196,12 +305,29 @@ export default class UserController {
         )
       );
     }
+    
     let userpayload = UserPayloadClass.createUserPayload(
       data.username,
       data.email,
       data._id
     );
     let token = jwtSign(userpayload);
+
+    let [tokenError, tokenData] = await tc(
+      this.userRepository.addTokenToDataBase(token, data._id)
+    );
+
+    if (tokenError || !tokenData) {
+      return next(
+        new GenericErrorResponse(
+          RESPONSE_MESSAGES.INTERNAL_ERROR,
+          RESPONSE_CODES.INTERNAL_ERROR,
+          ERROR_TYPE.INTERNAL_ERROR,
+          "Enable to generate token ,try login again"
+        )
+      );
+    }
+
     data = { accessToken: token };
     res
       .status(RESPONSE_CODES.SUCCESS)

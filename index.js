@@ -29,6 +29,8 @@ server.use(express.urlencoded({ extended: true }));
 
 // statically making available to the profile.pictures and post.pictures folder
 server.use(express.static(path.join("pictures")));
+server.use(express.static(path.join("pictures","profile.pictures")));
+server.use(express.static(path.join("pictures","post.pictures")));
 
 // routes for the api
 server.use("/api/users", publicUserRouter);
