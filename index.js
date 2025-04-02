@@ -4,6 +4,7 @@ import express from "express";
 import path from "path";
 import swagger from "swagger-ui-express";
 import {swaggerFile} from "./swagger.js";
+import cors from 'cors';
 
 //created imports
 import { mongodbConnect } from "./src/config/mongodb.config.js";
@@ -14,7 +15,7 @@ import {
   ERROR_TYPE,
 } from "./src/common/common.variable.js";
 import { jwtAuthGuard } from "./src/guard/jwt.auth.guard.js";
-
+import { corsConfig } from "./src/config/cors.config.js";
 // routing imports
 import secureUserRouter from "./src/features/users/user.secure.router.js";
 import publicUserRouter from "./src/features/users/user.public.router.js";
@@ -30,6 +31,7 @@ const port = process.env.PORT || 3000;
 // Essential middleware
 server.use(express.json());
 server.use(express.urlencoded({ extended: true }));
+server.use(cors(corsConfig));
 
 // statically making available to the profile.pictures and post.pictures folder
 server.use(express.static(path.join("pictures")));
