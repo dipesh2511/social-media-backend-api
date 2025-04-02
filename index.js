@@ -3,7 +3,7 @@ import "./env.js";
 import express from "express";
 import path from "path";
 import swagger from "swagger-ui-express";
-import swaggerFile from "./swagger.json" assert { type: 'json' };
+import {swaggerFile} from "./swagger.js";
 
 //created imports
 import { mongodbConnect } from "./src/config/mongodb.config.js";
@@ -37,7 +37,7 @@ server.use(express.static(path.join("pictures", "profile.pictures")));
 server.use(express.static(path.join("pictures", "post.pictures")));
 
 // swagger route
-server.use("/api-docs",swagger.serve,swagger.setup(swaggerFile));
+server.use("/api-docs", swagger.serve, swagger.setup(swaggerFile));
 
 // routes for the api
 server.use("/api/users", publicUserRouter);
@@ -59,6 +59,10 @@ server.use((error, req, res, next) => {
     );
     res.status(error.status || 500).send(generated_error);
   }
+});
+
+server.use((req, res) => {
+  res.redirect("api-docs")
 });
 
 server.listen(port, async () => {
